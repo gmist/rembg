@@ -3,10 +3,10 @@ import glob
 import os
 from distutils.util import strtobool
 
-import filetype
 from tqdm import tqdm
 
 from ..bg import remove
+from ..tools import is_image, heic_to_bytes
 
 
 def main():
@@ -91,7 +91,6 @@ def main():
         "input",
         nargs="?",
         default="-",
-        type=argparse.FileType("rb"),
         help="Path to the input image.",
     )
 
@@ -118,19 +117,19 @@ def main():
                 input_paths += set(glob.glob(path + "/*"))
 
         for fi in tqdm(files):
-            fi_type = filetype.guess(fi)
-
-            if fi_type is None:
-                continue
-            elif fi_type.mime.find("image") < 0:
+            fi_type = is_image(fi)
+            if not fi_type:
                 continue
 
-            with open(fi, "rb") as input:
+            with open(fi, "rb") as input_data:
+                if fi_type == 'image/heic':
+                    input_data = heic_to_bytes(input_data)
+
                 with open(os.path.join(output_path, os.path.splitext(os.path.basename(fi))[0] + ".png"), "wb") as output:
                     w(
                         output,
                         remove(
-                            r(input),
+                            r(input_data),
                             model_name=args.model,
                             alpha_matting=args.alpha_matting,
                             alpha_matting_foreground_threshold=args.alpha_matting_foreground_threshold,
@@ -141,18 +140,26 @@ def main():
                     )
 
     else:
-        w(
-            args.output,
-            remove(
-                r(args.input),
-                model_name=args.model,
-                alpha_matting=args.alpha_matting,
-                alpha_matting_foreground_threshold=args.alpha_matting_foreground_threshold,
-                alpha_matting_background_threshold=args.alpha_matting_background_threshold,
-                alpha_matting_erode_structure_size=args.alpha_matting_erode_size,
-                alpha_matting_base_size=args.alpha_matting_base_size,
-            ),
-        )
+        fi_type = is_image(args.input)
+        if not fi_type:
+            return
+
+        with open(args.input, "rb") as input_data:
+            if fi_type == 'image/heic':
+                input_data = heic_to_bytes(input_data)
+
+            w(
+                args.output,
+                remove(
+                    r(input_data),
+                    model_name=args.model,
+                    alpha_matting=args.alpha_matting,
+                    alpha_matting_foreground_threshold=args.alpha_matting_foreground_threshold,
+                    alpha_matting_background_threshold=args.alpha_matting_background_threshold,
+                    alpha_matting_erode_structure_size=args.alpha_matting_erode_size,
+                    alpha_matting_base_size=args.alpha_matting_base_size,
+                ),
+            )
 
 
 if __name__ == "__main__":
