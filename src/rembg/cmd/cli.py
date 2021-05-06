@@ -125,7 +125,10 @@ def main():
                 if fi_type == 'image/heic':
                     input_data = heic_to_bytes(input_data)
 
-                with open(os.path.join(output_path, os.path.splitext(os.path.basename(fi))[0] + ".png"), "wb") as output:
+                s_folders = os.path.join(output_path, *os.path.dirname(fi.split(full_paths[0])[1]).split(os.sep))
+                if not os.path.exists(s_folders):
+                    os.makedirs(s_folders)
+                with open(os.path.join(s_folders, os.path.splitext(os.path.basename(fi))[0] + ".png"), "wb") as output:
                     w(
                         output,
                         remove(
