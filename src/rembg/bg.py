@@ -3,6 +3,8 @@ import io
 
 import numpy as np
 from PIL import Image
+from PIL import ImageEnhance
+from PIL import ImageFilter
 from pymatting.alpha.estimate_alpha_cf import estimate_alpha_cf
 from pymatting.foreground.estimate_foreground_ml import estimate_foreground_ml
 from pymatting.util.util import stack_images
@@ -86,9 +88,17 @@ def remove(
     alpha_matting_background_threshold=10,
     alpha_matting_erode_structure_size=10,
     alpha_matting_base_size=1000,
+    enhance_brightness=1.0,
+    enhance_edge=False
 ):
     model = get_model(model_name)
     img = Image.open(io.BytesIO(data)).convert("RGB")
+
+    if enhance_brightness != 1.0:
+        img = ImageEnhance.Brightness(img).enhance(1.2)
+    if enhance_edge :
+        img = img.filter(ImageFilter.EDGE_ENHANCE)
+
     mask = detect.predict(model, np.array(img)).convert("L")
 
     if alpha_matting:

@@ -94,6 +94,24 @@ def main():
         help="Path to the input image.",
     )
 
+    ap.add_argument(
+        "-eb",
+        "--enhance_brightness",
+        default=1.0,
+        type=float,
+        help="Enhance brightness (0.0 gives a black image, factor of 1.0 gives the original image.",
+    )
+
+    ap.add_argument(
+        "-ee",
+        "--enhance_edge",
+        nargs="?",
+        const=True,
+        default=False,
+        type=lambda x: bool(strtobool(x)),
+        help="Increasing the contrast of the pixels around the specific edges.",
+    )
+
     args = ap.parse_args()
 
     r = lambda i: i.buffer.read() if hasattr(i, "buffer") else i.read()
@@ -139,6 +157,8 @@ def main():
                             alpha_matting_background_threshold=args.alpha_matting_background_threshold,
                             alpha_matting_erode_structure_size=args.alpha_matting_erode_size,
                             alpha_matting_base_size=args.alpha_matting_base_size,
+                            enhance_brightness=args.enhance_brightness,
+                            enhance_edge=args.enhance_edge,
                         ),
                     )
 
@@ -161,6 +181,8 @@ def main():
                     alpha_matting_background_threshold=args.alpha_matting_background_threshold,
                     alpha_matting_erode_structure_size=args.alpha_matting_erode_size,
                     alpha_matting_base_size=args.alpha_matting_base_size,
+                    enhance_brightness=args.enhance_brightness,
+                    enhance_edge=args.enhance_edge,
                 ),
             )
 
